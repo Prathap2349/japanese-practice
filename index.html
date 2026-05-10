@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="日本語練習">
+<meta name="theme-color" content="#f7f3ec">
+<link rel="manifest" href="data:application/json,{%22name%22:%22Japanese%20Practice%22,%22short_name%22:%22日本語%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f7f3ec%22,%22theme_color%22:%22%23f7f3ec%22}">
+<title>日本語 練習 — Japanese Writing Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1209;--paper:#f7f3ec;--paper2:#f0ead8;
+  --accent:#c0392b;--accent2:#e8a020;--muted:#8a7d6b;
+  --border:rgba(26,18,9,0.12);--canvas-bg:#fefcf8;
+  --green:#2d7a4f;--blue:#1a5fa8;--purple:#6b3fa0;
+}
+[data-dark]{
+  --ink:#e8e0d0;--paper:#1a1612;--paper2:#221e18;
+  --muted:#6b6055;--border:rgba(232,224,208,0.1);--canvas-bg:#1e1a14;
+}
+html,body{height:100%;background:var(--paper);color:var(--ink);font-family:'DM Mono',monospace;overflow-x:hidden;transition:background 0.3s,color 0.3s}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(26,18,9,0.025) 28px,rgba(26,18,9,0.025) 29px),
+  repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(26,18,9,0.015) 28px,rgba(26,18,9,0.015) 29px);}
+.app{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:1.25rem 1rem 6rem}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1.5px solid var(--border)}
+.jp-title{font-family:'Noto Sans JP',sans-serif;font-size:clamp(1.4rem,5vw,2rem);font-weight:700;line-height:1}
+.subtitle{font-size:10px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{background:transparent;border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:16px;color:var(--ink);transition:all 0.15s}
+.icon-btn:hover{background:var(--paper2)}
+
+/* Tabs */
+.tabs{display:flex;margin-bottom:1rem;border:1.5px solid var(--border);border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.tab{flex:1;min-width:80px;padding:8px 4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all 0.2s;border-right:1px solid var(--border);line-height:1.4}
+.tab:last-child{border-right:none}
+.tab.active{background:var(--ink);color:var(--paper)}
+.tab:not(.active):hover{background:var(--paper2);color:var(--ink)}
+
+/* Sub tabs */
+.subtabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.subtab{padding:5px 12px;font-size:11px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s;font-family:'DM Mono',monospace}
+.subtab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.subtab:hover:not(.active){background:var(--paper2);color:var(--ink)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.tool-btn{padding:6px 12px;font-size:11px;border:1.5px solid var(--border);border-radius:5px;cursor:pointer;background:var(--paper);color:var(--ink);font-family:'DM Mono',monospace;transition:all 0.15s;white-space:nowrap}
+.tool-btn:hover{background:var(--paper2)}
+.tool-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tool-sep{width:1px;height:24px;background:var(--border);margin:0 2px}
+
+/* Daily goal bar */
+.goal-bar{background:var(--paper2);border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:12px;border:1.5px solid var(--border)}
+.goal-text{font-size:12px;color:var(--muted);flex:1}
+.goal-text strong{color:var(--ink)}
+.goal-track{width:120px;height:6px;background:var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.goal-fill{height:100%;background:var(--green);border-radius:6px;transition:width 0.4s}
+
+/* Progress */
+.progress-row{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.progress-track{flex:1;height:3px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.4s cubic-bezier(.4,0,.2,1)}
+.progress-label{font-size:11px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right}
+
+/* Timer bar */
+.timer-bar{display:none;background:var(--ink);color:var(--paper);border-radius:8px;padding:10px 16px;margin-bottom:1rem;align-items:center;justify-content:space-between}
+.timer-bar.show{display:flex}
+.timer-num{font-size:22px;font-weight:500;font-family:'Playfair Display',serif}
+.timer-score{font-size:13px;color:rgba(255,255,255,0.7)}
+.timer-track{flex:1;height:4px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;margin:0 16px}
+.timer-fill{height:100%;background:#fff;border-radius:4px;transition:width 1s linear}
+
+/* Main layout */
+.practice-area{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:stretch}
+@media(max-width:540px){.practice-area{grid-template-columns:1fr;gap:1rem}}
+
+/* Character card */
+.char-card{background:white;border:1.5px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem 1rem;position:relative;min-height:280px}
+[data-dark] .char-card{background:var(--paper2)}
+.char-card::before{content:'';position:absolute;top:8px;left:8px;right:-8px;bottom:-8px;background:var(--paper2);border-radius:8px;z-index:-1;border:1px solid var(--border)}
+.card-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+.big-char{font-family:'Noto Sans JP',sans-serif;font-size:clamp(64px,14vw,100px);line-height:1;color:var(--ink);margin-bottom:0.4rem;user-select:none;animation:popIn 0.25s ease}
+@keyframes popIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.romaji{font-family:'Playfair Display',serif;font-size:18px;color:var(--accent);margin-bottom:4px}
+.char-type{font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:8px}
+.example-word{font-size:11px;color:var(--muted);text-align:center;max-width:160px;line-height:1.5;background:var(--paper2);padding:5px 10px;border-radius:5px;margin-top:4px}
+.example-word span{color:var(--ink);font-family:'Noto Sans JP',sans-serif}
+.audio-btn{margin-top:8px;background:transparent;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;transition:all 0.15s}
+.audio-btn:hover{background:var(--paper2);color:var(--ink)}
+.stroke-hint{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* Canvas card */
+.canvas-card{background:var(--canvas-bg);border:1.5px solid var(--border);border-radius:8px;display:flex;flex-direction:column;min-height:280px;overflow:hidden}
+[data-dark] .canvas-card{background:var(--paper2)}
+.canvas-top{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.draw-label{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)}
+.mode-badge{font-size:10px;padding:3px 8px;border-radius:3px;background:var(--paper2);color:var(--muted);letter-spacing:0.06em;transition:all 0.2s}
+.mode-badge.on{background:var(--accent);color:white}
+
+/* Pen toolbar */
+.pen-toolbar{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.color-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0}
+.color-dot.active{border-color:var(--ink);transform:scale(1.2)}
+.thickness-slider{flex:1;min-width:60px;max-width:100px;height:3px;cursor:pointer}
+
+.canvas-wrap{position:relative;flex:1;min-height:180px}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.guide-char{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',sans-serif;font-size:clamp(64px,13vw,90px);color:var(--ink);opacity:0.05;pointer-events:none;user-select:none}
+.grid-lines{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:50% 50%}
+
+.canvas-bottom{flex-shrink:0;border-top:1px solid var(--border);background:white;padding:10px 12px}
+[data-dark] .canvas-bottom{background:var(--paper2)}
+.btn-row{display:flex;gap:8px}
+.btn{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.04em;padding:9px 10px;border-radius:5px;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--ink);transition:all 0.15s;flex:1;text-align:center}
+.btn:hover{background:var(--paper2)}
+.btn:active{transform:scale(0.97)}
+.btn-next{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-next:hover{background:#2d2316}
+.btn-draw{width:100%;padding:13px 12px;font-size:14px;font-weight:500;background:var(--paper2);border:1.5px solid var(--border);border-radius:6px;color:var(--ink);margin-bottom:8px;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'DM Mono',monospace}
+.btn-draw.active{background:var(--accent);color:white;border-color:var(--accent)}
+
+/* Badges panel */
+.badges-panel{margin-top:1.5rem;background:var(--paper2);border-radius:8px;padding:1rem;border:1.5px solid var(--border)}
+.badges-title{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.badges-grid{display:flex;gap:10px;flex-wrap:wrap}
+.badge-item{text-align:center;opacity:0.3;transition:all 0.3s;filter:grayscale(1)}
+.badge-item.earned{opacity:1;filter:grayscale(0)}
+.badge-icon{font-size:28px;display:block;margin-bottom:3px}
+.badge-name{font-size:10px;color:var(--muted)}
+
+/* Level indicator */
+.level-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding:8px 12px;background:var(--paper2);border-radius:6px;border:1.5px solid var(--border)}
+.level-name{font-size:11px;font-weight:500;color:var(--ink);min-width:80px}
+.level-track{flex:1;height:6px;background:var(--border);border-radius:6px;overflow:hidden}
+.level-fill{height:100%;background:var(--purple);border-radius:6px;transition:width 0.5s}
+.level-xp{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* Enter hint */
+.enter-hint{text-align:center;font-size:11px;color:var(--muted);margin-top:1rem;letter-spacing:0.05em;line-height:2}
+.key-badge{display:inline-block;background:white;border:1.5px solid var(--border);border-radius:4px;padding:1px 7px 2px;font-size:11px;color:var(--ink);box-shadow:0 2px 0 var(--border)}
+[data-dark] .key-badge{background:var(--paper2)}
+
+/* Completion */
+.complete-screen{display:none;text-align:center;padding:3rem 1rem}
+.complete-screen.show{display:block}
+.complete-big{font-size:56px;margin-bottom:1rem}
+.complete-msg{font-family:'Playfair Display',serif;font-size:22px;color:var(--accent);margin-bottom:0.5rem}
+.complete-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.complete-badges{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:2rem}
+.earned-badge{text-align:center}
+.earned-badge .b-icon{font-size:40px}
+.earned-badge .b-name{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper);font-family:'DM Mono',monospace;font-size:13px;padding:9px 18px;border-radius:6px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:100;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Install banner */
+.install-banner{display:none;align-items:center;gap:10px;background:var(--blue);color:#fff;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px}
+.install-banner.show{display:flex}
+.install-banner button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'DM Mono',monospace}
+
+/* Welcome / login screen */
+.welcome-screen{position:fixed;inset:0;background:var(--paper);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.welcome-screen.hidden{display:none}
+.welcome-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:2rem 1.75rem;max-width:380px;width:100%;text-align:center;position:relative}
+[data-dark] .welcome-card{background:var(--paper2)}
+.welcome-card::before{content:'';position:absolute;top:10px;left:10px;right:-10px;bottom:-10px;background:var(--paper2);border-radius:12px;z-index:-1;border:1px solid var(--border)}
+.welcome-logo{font-family:'Noto Sans JP',sans-serif;font-size:52px;line-height:1;margin-bottom:0.5rem}
+.welcome-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--accent);margin-bottom:0.25rem}
+.welcome-sub{font-size:11px;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:2rem}
+.avatar-row{display:flex;justify-content:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.avatar-opt{width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;background:var(--paper2)}
+.avatar-opt.selected{border-color:var(--accent);transform:scale(1.15)}
+.welcome-label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:left}
+.welcome-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;background:var(--paper);color:var(--ink);font-family:'DM Mono',monospace;margin-bottom:1.25rem;outline:none;transition:border 0.15s}
+.welcome-input:focus{border-color:var(--accent)}
+.welcome-start{width:100%;padding:13px;background:var(--ink);color:var(--paper);border:none;border-radius:6px;font-size:14px;font-weight:500;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.15s;letter-spacing:0.05em}
+.welcome-start:hover{background:#2d2316}
+.welcome-start:active{transform:scale(0.98)}
+.welcome-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6}
+.user-chip{display:flex;align-items:center;gap:7px;background:var(--paper2);border:1.5px solid var(--border);border-radius:20px;padding:4px 10px 4px 4px;cursor:pointer;transition:all 0.15s}
+.user-chip:hover{background:var(--paper2);border-color:var(--accent)}
+.logout-btn{background:transparent;border:1.5px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--accent);font-family:'DM Mono',monospace;transition:all 0.15s;white-space:nowrap;font-weight:500}
+.logout-btn:hover{background:var(--accent);color:white;border-color:var(--accent)}
+.logout-btn:active{transform:scale(0.97)}
+.user-avatar-sm{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--paper2)}
+.user-name-sm{font-size:12px;color:var(--ink);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+</style>
+</head>
+<body>
+<!-- Welcome Screen -->
+<div class="welcome-screen" id="welcome-screen">
+  <div class="welcome-card">
+    <div class="welcome-logo">日本語</div>
+    <div class="welcome-title">Welcome!</div>
+    <div class="welcome-sub">Japanese Writing Practice</div>
+    <div class="welcome-label">Choose your avatar</div>
+    <div class="avatar-row" id="avatar-row">
+      <div class="avatar-opt selected" data-avatar="🐼" onclick="selectAvatar(this)">🐼</div>
+      <div class="avatar-opt" data-avatar="🦊" onclick="selectAvatar(this)">🦊</div>
+      <div class="avatar-opt" data-avatar="🐯" onclick="selectAvatar(this)">🐯</div>
+      <div class="avatar-opt" data-avatar="🐸" onclick="selectAvatar(this)">🐸</div>
+      <div class="avatar-opt" data-avatar="🐙" onclick="selectAvatar(this)">🐙</div>
+      <div class="avatar-opt" data-avatar="🦋" onclick="selectAvatar(this)">🦋</div>
+      <div class="avatar-opt" data-avatar="🌸" onclick="selectAvatar(this)">🌸</div>
+      <div class="avatar-opt" data-avatar="⭐" onclick="selectAvatar(this)">⭐</div>
+    </div>
+    <div class="welcome-label">Your name</div>
+    <input class="welcome-input" id="username-input" type="text" placeholder="e.g. Prathap" maxlength="20" onkeydown="if(event.key==='Enter')startPractice()">
+    <button class="welcome-start" onclick="startPractice()">Start Practicing →</button>
+    <div id="name-error" style="color:var(--accent);font-size:12px;margin-bottom:8px;display:none">⚠️ This name is currently in use. Please choose another.</div>
+    <div class="welcome-note">🔒 Your progress is saved only on this device.<br>Names in use are locked until that user logs out.</div>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- Header -->
+  <header>
+    <div>
+      <div class="jp-title">日本語 練習</div>
+      <div class="subtitle">Japanese Writing Practice</div>
+    </div>
+    <div class="header-actions">
+      <div class="user-chip" id="user-chip" style="display:none">
+        <div class="user-avatar-sm" id="header-avatar">🐼</div>
+        <span class="user-name-sm" id="header-name">User</span>
+      </div>
+      <button class="logout-btn" id="logout-btn" onclick="logout()" style="display:none">Log out</button>
+      <button class="icon-btn" id="dark-btn" onclick="toggleDark()" title="Dark mode">🌙</button>
+      <button class="icon-btn" onclick="openGoalModal()" title="Daily goal">🎯</button>
+      <button class="icon-btn" onclick="startTimer()" title="60s timer">⏱️</button>
+    </div>
+  </header>
+
+  <!-- Install banner -->
+  <div class="install-banner" id="install-banner">
+    <span style="flex:1">📲 Add to Home Screen for offline use!</span>
+    <button onclick="installApp()">Install</button>
+    <button onclick="document.getElementById('install-banner').classList.remove('show')" style="background:transparent;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button>
+  </div>
+
+  <!-- Level bar -->
+  <div class="level-bar">
+    <span class="level-name" id="level-name">🌱 Beginner</span>
+    <div class="level-track"><div class="level-fill" id="level-fill" style="width:0%"></div></div>
+    <span class="level-xp" id="level-xp">0 / 50 XP</span>
+  </div>
+
+  <!-- Daily goal -->
+  <div class="goal-bar">
+    <div class="goal-text">Daily goal: <strong id="goal-done">0</strong> / <strong id="goal-target">10</strong> characters</div>
+    <div class="goal-track"><div class="goal-fill" id="goal-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Timer bar -->
+  <div class="timer-bar" id="timer-bar">
+    <span class="timer-num" id="timer-num">60</span>
+    <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+    <span class="timer-score">Score: <strong id="timer-score">0</strong></span>
+  </div>
+
+  <!-- Category tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setCategory('hiragana',this)">Hiragana<br><span style="font-size:9px;opacity:0.6">ひらがな</span></button>
+    <button class="tab" onclick="setCategory('katakana',this)">Katakana<br><span style="font-size:9px;opacity:0.6">カタカナ</span></button>
+    <button class="tab" onclick="setCategory('numbers',this)">Numbers<br><span style="font-size:9px;opacity:0.6">数字</span></button>
+  </div>
+
+  <!-- Sub-category tabs -->
+  <div class="subtabs" id="subtabs">
+    <button class="subtab active" onclick="setSubcat('seion',this)">Seion</button>
+    <button class="subtab" onclick="setSubcat('dakuon',this)">Dakūon</button>
+    <button class="subtab" onclick="setSubcat('handakuon',this)">Handakūon</button>
+    <button class="subtab" onclick="setSubcat('yoon',this)">Yōon</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="tool-btn" id="shuffle-btn" onclick="toggleShuffle()">🔀 Shuffle</button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" onclick="startTimer()">⏱ 60s Challenge</button>
+    <div class="tool-sep"></div>
+    <span style="font-size:11px;color:var(--muted)">Pen:</span>
+    <button class="tool-btn active" id="pen-black" onclick="setPenColor('#1a1209',this)">⚫</button>
+    <button class="tool-btn" id="pen-red" onclick="setPenColor('#c0392b',this)">🔴</button>
+    <button class="tool-btn" id="pen-blue" onclick="setPenColor('#1a5fa8',this)">🔵</button>
+    <div class="tool-sep"></div>
+    <input type="range" min="2" max="12" value="5" step="1" id="thickness-range" oninput="setPenThickness(this.value)" title="Pen thickness" style="width:70px;cursor:pointer">
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:2%"></div></div>
+    <div class="progress-label" id="progress-label">1 / 46</div>
+  </div>
+
+  <!-- Practice area -->
+  <div class="practice-area" id="practice-area">
+
+    <!-- Left: character -->
+    <div class="char-card">
+      <div class="card-label">Copy this</div>
+      <div class="big-char" id="target-char">あ</div>
+      <div class="romaji" id="target-romaji">a</div>
+      <div class="char-type" id="target-type">Hiragana · Seion</div>
+      <div class="stroke-hint" id="stroke-hint"></div>
+      <div class="example-word" id="example-word"></div>
+      <button class="audio-btn" onclick="speak()" id="audio-btn">🔊 Hear it</button>
+    </div>
+
+    <!-- Right: canvas -->
+    <div class="canvas-card">
+      <div class="canvas-top">
+        <div class="draw-label">Draw here</div>
+        <div class="mode-badge" id="mode-badge">—</div>
+      </div>
+      <div class="pen-toolbar">
+        <div class="color-dot active" style="background:#1a1209" onclick="setPenColorDot('#1a1209',this)" id="dot-black"></div>
+        <div class="color-dot" style="background:#c0392b" onclick="setPenColorDot('#c0392b',this)" id="dot-red"></div>
+        <div class="color-dot" style="background:#1a5fa8" onclick="setPenColorDot('#1a5fa8',this)" id="dot-blue"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:4px">size:</span>
+        <input type="range" min="2" max="12" value="5" step="1" class="thickness-slider" oninput="setPenThickness(this.value)">
+      </div>
+      <div class="canvas-wrap" id="canvas-wrap">
+        <div class="grid-lines"></div>
+        <div class="guide-char" id="guide-char">あ</div>
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="canvas-bottom" id="canvas-bottom"></div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="badges-panel">
+    <div class="badges-title">Your Badges</div>
+    <div class="badges-grid" id="badges-grid"></div>
+  </div>
+
+  <!-- Completion -->
+  <div class="complete-screen" id="complete-screen">
+    <div class="complete-big">🎉</div>
+    <div class="complete-msg">素晴らしい！ Excellent!</div>
+    <div class="complete-sub" id="complete-sub"></div>
+    <div class="complete-badges" id="complete-badges"></div>
+    <button class="btn btn-next" style="margin:0 auto;display:block;max-width:200px" onclick="restartSet()">Start Again →</button>
+  </div>
+
+  <div class="enter-hint" id="enter-hint"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Goal modal -->
+<div id="goal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--paper);border-radius:12px;padding:1.5rem;max-width:320px;width:90%;margin:auto">
+    <div style="font-size:14px;font-weight:500;margin-bottom:1rem">🎯 Set Daily Goal</div>
+    <input type="number" id="goal-input" value="10" min="5" max="100" step="5" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;background:var(--paper);color:var(--ink);font-family:'DM Mono',monospace;margin-bottom:1rem">
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="closeGoalModal()">Cancel</button>
+      <button class="btn btn-next" onclick="saveGoal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA — all characters
+// ═══════════════════════════════════════════
+const DATA = {
+  hiragana: {
+    seion: [
+      {c:'あ',r:'a',ex:'あめ (ame) — rain',strokes:3},
+      {c:'い',r:'i',ex:'いぬ (inu) — dog',strokes:2},
+      {c:'う',r:'u',ex:'うみ (umi) — sea',strokes:2},
+      {c:'え',r:'e',ex:'えき (eki) — station',strokes:2},
+      {c:'お',r:'o',ex:'おに (oni) — demon',strokes:3},
+      {c:'か',r:'ka',ex:'かさ (kasa) — umbrella',strokes:3},
+      {c:'き',r:'ki',ex:'きく (kiku) — chrysanthemum',strokes:4},
+      {c:'く',r:'ku',ex:'くも (kumo) — cloud',strokes:1},
+      {c:'け',r:'ke',ex:'けむり (kemuri) — smoke',strokes:3},
+      {c:'こ',r:'ko',ex:'こえ (koe) — voice',strokes:2},
+      {c:'さ',r:'sa',ex:'さくら (sakura) — cherry blossom',strokes:3},
+      {c:'し',r:'shi',ex:'しろ (shiro) — white',strokes:1},
+      {c:'す',r:'su',ex:'すし (sushi) — sushi',strokes:2},
+      {c:'せ',r:'se',ex:'せかい (sekai) — world',strokes:3},
+      {c:'そ',r:'so',ex:'そら (sora) — sky',strokes:1},
+      {c:'た',r:'ta',ex:'たべる (taberu) — to eat',strokes:4},
+      {c:'ち',r:'chi',ex:'ちず (chizu) — map',strokes:2},
+      {c:'つ',r:'tsu',ex:'つき (tsuki) — moon',strokes:1},
+      {c:'て',r:'te',ex:'てがみ (tegami) — letter',strokes:1},
+      {c:'と',r:'to',ex:'とり (tori) — bird',strokes:2},
+      {c:'な',r:'na',ex:'なつ (natsu) — summer',strokes:4},
+      {c:'に',r:'ni',ex:'にわ (niwa) — garden',strokes:3},
+      {c:'ぬ',r:'nu',ex:'ぬの (nuno) — cloth',strokes:2},
+      {c:'ね',r:'ne',ex:'ねこ (neko) — cat',strokes:2},
+      {c:'の',r:'no',ex:'のり (nori) — seaweed',strokes:1},
+      {c:'は',r:'ha',ex:'はな (hana) — flower',strokes:3},
+      {c:'ひ',r:'hi',ex:'ひと (hito) — person',strokes:1},
+      {c:'ふ',r:'fu',ex:'ふじ (fuji) — Mt. Fuji',strokes:4},
+      {c:'へ',r:'he',ex:'へや (heya) — room',strokes:1},
+      {c:'ほ',r:'ho',ex:'ほし (hoshi) — star',strokes:4},
+      {c:'ま',r:'ma',ex:'まち (machi) — town',strokes:3},
+      {c:'み',r:'mi',ex:'みず (mizu) — water',strokes:2},
+      {c:'む',r:'mu',ex:'むし (mushi) — insect',strokes:3},
+      {c:'め',r:'me',ex:'めだか (medaka) — killifish',strokes:2},
+      {c:'も',r:'mo',ex:'もり (mori) — forest',strokes:3},
+      {c:'や',r:'ya',ex:'やま (yama) — mountain',strokes:3},
+      {c:'ゆ',r:'yu',ex:'ゆき (yuki) — snow',strokes:2},
+      {c:'よ',r:'yo',ex:'よる (yoru) — night',strokes:2},
+      {c:'ら',r:'ra',ex:'らくだ (rakuda) — camel',strokes:2},
+      {c:'り',r:'ri',ex:'りんご (ringo) — apple',strokes:2},
+      {c:'る',r:'ru',ex:'るす (rusu) — absence',strokes:1},
+      {c:'れ',r:'re',ex:'れいぞうこ (reizouko) — fridge',strokes:2},
+      {c:'ろ',r:'ro',ex:'ろく (roku) — six',strokes:1},
+      {c:'わ',r:'wa',ex:'わに (wani) — crocodile',strokes:2},
+      {c:'を',r:'wo',ex:'(object marker particle)',strokes:3},
+      {c:'ん',r:'n',ex:'(nasal sound)',strokes:1}
+    ],
+    dakuon: [
+      {c:'が',r:'ga',ex:'がっこう (gakkou) — school',strokes:4},
+      {c:'ぎ',r:'gi',ex:'ぎゅうにゅう (gyuunyuu) — milk',strokes:5},
+      {c:'ぐ',r:'gu',ex:'ぐんて (gunte) — gloves',strokes:2},
+      {c:'げ',r:'ge',ex:'げんき (genki) — healthy',strokes:4},
+      {c:'ご',r:'go',ex:'ごはん (gohan) — rice',strokes:3},
+      {c:'ざ',r:'za',ex:'ざっし (zasshi) — magazine',strokes:4},
+      {c:'じ',r:'ji',ex:'じかん (jikan) — time',strokes:2},
+      {c:'ず',r:'zu',ex:'ずかん (zukan) — illustrated book',strokes:3},
+      {c:'ぜ',r:'ze',ex:'ぜんぶ (zenbu) — everything',strokes:4},
+      {c:'ぞ',r:'zo',ex:'ぞう (zou) — elephant',strokes:2},
+      {c:'だ',r:'da',ex:'だいがく (daigaku) — university',strokes:5},
+      {c:'ぢ',r:'ji',ex:'(rare usage)',strokes:3},
+      {c:'づ',r:'dzu',ex:'(rare usage)',strokes:2},
+      {c:'で',r:'de',ex:'でんしゃ (densha) — train',strokes:2},
+      {c:'ど',r:'do',ex:'どうぶつ (doubutsu) — animal',strokes:3},
+      {c:'ば',r:'ba',ex:'バナナ (banana) — banana',strokes:4},
+      {c:'び',r:'bi',ex:'びょういん (byouin) — hospital',strokes:2},
+      {c:'ぶ',r:'bu',ex:'ぶた (buta) — pig',strokes:5},
+      {c:'べ',r:'be',ex:'べんきょう (benkyou) — study',strokes:2},
+      {c:'ぼ',r:'bo',ex:'ぼうし (boushi) — hat',strokes:5}
+    ],
+    handakuon: [
+      {c:'ぱ',r:'pa',ex:'ぱん (pan) — bread',strokes:4},
+      {c:'ぴ',r:'pi',ex:'ぴあの (piano) — piano',strokes:2},
+      {c:'ぷ',r:'pu',ex:'ぷーる (puuru) — pool',strokes:5},
+      {c:'ぺ',r:'pe',ex:'ぺん (pen) — pen',strokes:2},
+      {c:'ぽ',r:'po',ex:'ぽすと (posuto) — mailbox',strokes:5}
+    ],
+    yoon: [
+      {c:'きゃ',r:'kya',ex:'きゃく (kyaku) — guest',strokes:7},
+      {c:'きゅ',r:'kyu',ex:'きゅうり (kyuuri) — cucumber',strokes:6},
+      {c:'きょ',r:'kyo',ex:'きょうと (kyouto) — Kyoto',strokes:6},
+      {c:'しゃ',r:'sha',ex:'しゃしん (shashin) — photo',strokes:3},
+      {c:'しゅ',r:'shu',ex:'しゅくだい (shukudai) — homework',strokes:4},
+      {c:'しょ',r:'sho',ex:'しょうがっこう (shougakkou) — elementary school',strokes:4},
+      {c:'ちゃ',r:'cha',ex:'ちゃわん (chawan) — teacup',strokes:6},
+      {c:'ちゅ',r:'chu',ex:'ちゅうごく (chuugoku) — China',strokes:4},
+      {c:'ちょ',r:'cho',ex:'ちょうちょ (chouchou) — butterfly',strokes:4},
+      {c:'にゃ',r:'nya',ex:'にゃんこ (nyanko) — kitty',strokes:7},
+      {c:'にゅ',r:'nyu',ex:'にゅうがく (nyuugaku) — school entry',strokes:6},
+      {c:'によ',r:'nyo',ex:'(combined sound)',strokes:6},
+      {c:'ひゃ',r:'hya',ex:'ひゃく (hyaku) — 100',strokes:5},
+      {c:'ひゅ',r:'hyu',ex:'(combined sound)',strokes:3},
+      {c:'ひょ',r:'hyo',ex:'ひょう (hyou) — hail',strokes:6},
+      {c:'みゃ',r:'mya',ex:'(combined sound)',strokes:5},
+      {c:'みゅ',r:'myu',ex:'(combined sound)',strokes:4},
+      {c:'みょ',r:'myo',ex:'みょうじ (myouji) — surname',strokes:4},
+      {c:'りゃ',r:'rya',ex:'(combined sound)',strokes:4},
+      {c:'りゅ',r:'ryu',ex:'りゅう (ryuu) — dragon',strokes:4},
+      {c:'りょ',r:'ryo',ex:'りょこう (ryokou) — travel',strokes:4},
+      {c:'ぎゃ',r:'gya',ex:'(combined sound)',strokes:7},
+      {c:'ぎゅ',r:'gyu',ex:'ぎゅうにく (gyuuniku) — beef',strokes:8},
+      {c:'ぎょ',r:'gyo',ex:'ぎょうざ (gyouza) — dumplings',strokes:5},
+      {c:'じゃ',r:'ja',ex:'じゃがいも (jagaimo) — potato',strokes:4},
+      {c:'じゅ',r:'ju',ex:'じゅうしょ (juusho) — address',strokes:4},
+      {c:'じょ',r:'jo',ex:'じょゆう (joyuu) — actress',strokes:4},
+      {c:'びゃ',r:'bya',ex:'(combined sound)',strokes:6},
+      {c:'びゅ',r:'byu',ex:'(combined sound)',strokes:4},
+      {c:'びょ',r:'byo',ex:'びょういん (byouin) — hospital',strokes:5},
+      {c:'ぴゃ',r:'pya',ex:'(combined sound)',strokes:6},
+      {c:'ぴゅ',r:'pyu',ex:'(combined sound)',strokes:4},
+      {c:'ぴょ',r:'pyo',ex:'ぴょんぴょん (pyonpyon) — hopping',strokes:5}
+    ]
+  },
+  katakana: {
+    seion: [
+      {c:'ア',r:'a',ex:'アイスクリーム (aisukuriimu) — ice cream',strokes:2},
+      {c:'イ',r:'i',ex:'インターネット (intaanetto) — internet',strokes:2},
+      {c:'ウ',r:'u',ex:'ウイルス (uirusu) — virus',strokes:3},
+      {c:'エ',r:'e',ex:'エアコン (eakon) — air conditioner',strokes:3},
+      {c:'オ',r:'o',ex:'オレンジ (orenji) — orange',strokes:3},
+      {c:'カ',r:'ka',ex:'カメラ (kamera) — camera',strokes:2},
+      {c:'キ',r:'ki',ex:'キッチン (kicchin) — kitchen',strokes:3},
+      {c:'ク',r:'ku',ex:'クラス (kurasu) — class',strokes:2},
+      {c:'ケ',r:'ke',ex:'ケーキ (keeki) — cake',strokes:3},
+      {c:'コ',r:'ko',ex:'コーヒー (koohii) — coffee',strokes:2},
+      {c:'サ',r:'sa',ex:'サッカー (sakkaa) — soccer',strokes:3},
+      {c:'シ',r:'shi',ex:'シャツ (shatsu) — shirt',strokes:3},
+      {c:'ス',r:'su',ex:'スポーツ (supootsu) — sports',strokes:2},
+      {c:'セ',r:'se',ex:'セーター (seetaa) — sweater',strokes:3},
+      {c:'ソ',r:'so',ex:'ソファ (sofa) — sofa',strokes:2},
+      {c:'タ',r:'ta',ex:'タクシー (takushii) — taxi',strokes:3},
+      {c:'チ',r:'chi',ex:'チーズ (chiizu) — cheese',strokes:3},
+      {c:'ツ',r:'tsu',ex:'ツアー (tsuaa) — tour',strokes:3},
+      {c:'テ',r:'te',ex:'テレビ (terebi) — TV',strokes:3},
+      {c:'ト',r:'to',ex:'トマト (tomato) — tomato',strokes:2},
+      {c:'ナ',r:'na',ex:'ナイフ (naifu) — knife',strokes:2},
+      {c:'ニ',r:'ni',ex:'ニュース (nyuusu) — news',strokes:2},
+      {c:'ヌ',r:'nu',ex:'ヌードル (nuudoru) — noodle',strokes:2},
+      {c:'ネ',r:'ne',ex:'ネクタイ (nekutai) — necktie',strokes:4},
+      {c:'ノ',r:'no',ex:'ノート (nooto) — notebook',strokes:1},
+      {c:'ハ',r:'ha',ex:'ハンバーガー (hanbaagaa) — hamburger',strokes:2},
+      {c:'ヒ',r:'hi',ex:'ヒーター (hiitaa) — heater',strokes:2},
+      {c:'フ',r:'fu',ex:'フランス (furansu) — France',strokes:1},
+      {c:'ヘ',r:'he',ex:'ヘルメット (herumetto) — helmet',strokes:1},
+      {c:'ホ',r:'ho',ex:'ホテル (hoteru) — hotel',strokes:4},
+      {c:'マ',r:'ma',ex:'マンゴー (mangoo) — mango',strokes:2},
+      {c:'ミ',r:'mi',ex:'ミルク (miruku) — milk',strokes:3},
+      {c:'ム',r:'mu',ex:'ムード (muudo) — mood',strokes:2},
+      {c:'メ',r:'me',ex:'メニュー (menyuu) — menu',strokes:2},
+      {c:'モ',r:'mo',ex:'モデル (moderu) — model',strokes:3},
+      {c:'ヤ',r:'ya',ex:'ヤシ (yashi) — palm tree',strokes:3},
+      {c:'ユ',r:'yu',ex:'ユーモア (yuumoa) — humor',strokes:2},
+      {c:'ヨ',r:'yo',ex:'ヨーグルト (yooguruto) — yogurt',strokes:3},
+      {c:'ラ',r:'ra',ex:'ラーメン (raamen) — ramen',strokes:2},
+      {c:'リ',r:'ri',ex:'リモコン (rimokon) — remote control',strokes:2},
+      {c:'ル',r:'ru',ex:'ルール (ruuru) — rule',strokes:2},
+      {c:'レ',r:'re',ex:'レストラン (resutoran) — restaurant',strokes:1},
+      {c:'ロ',r:'ro',ex:'ロボット (robotto) — robot',strokes:3},
+      {c:'ワ',r:'wa',ex:'ワイン (wain) — wine',strokes:2},
+      {c:'ヲ',r:'wo',ex:'(object marker)',strokes:3},
+      {c:'ン',r:'n',ex:'(nasal sound)',strokes:2}
+    ],
+    dakuon: [
+      {c:'ガ',r:'ga',ex:'ガラス (garasu) — glass',strokes:3},
+      {c:'ギ',r:'gi',ex:'ギター (gitaa) — guitar',strokes:4},
+      {c:'グ',r:'gu',ex:'グラス (gurasu) — glass cup',strokes:3},
+      {c:'ゲ',r:'ge',ex:'ゲーム (geemu) — game',strokes:4},
+      {c:'ゴ',r:'go',ex:'ゴルフ (gorufu) — golf',strokes:3},
+      {c:'ザ',r:'za',ex:'ザーサイ (zaasai) — pickled radish',strokes:4},
+      {c:'ジ',r:'ji',ex:'ジュース (juusu) — juice',strokes:4},
+      {c:'ズ',r:'zu',ex:'ズボン (zubon) — trousers',strokes:3},
+      {c:'ゼ',r:'ze',ex:'ゼリー (zerii) — jelly',strokes:4},
+      {c:'ゾ',r:'zo',ex:'ゾンビ (zombie) — zombie',strokes:3},
+      {c:'ダ',r:'da',ex:'ダンス (dansu) — dance',strokes:4},
+      {c:'ヂ',r:'ji',ex:'(rare usage)',strokes:4},
+      {c:'ヅ',r:'du',ex:'(rare usage)',strokes:4},
+      {c:'デ',r:'de',ex:'デパート (depaato) — department store',strokes:4},
+      {c:'ド',r:'do',ex:'ドア (doa) — door',strokes:3},
+      {c:'バ',r:'ba',ex:'バス (basu) — bus',strokes:3},
+      {c:'ビ',r:'bi',ex:'ビール (biiru) — beer',strokes:3},
+      {c:'ブ',r:'bu',ex:'ブーツ (buutsu) — boots',strokes:2},
+      {c:'ベ',r:'be',ex:'ベッド (beddo) — bed',strokes:2},
+      {c:'ボ',r:'bo',ex:'ボール (booru) — ball',strokes:5}
+    ],
+    handakuon: [
+      {c:'パ',r:'pa',ex:'パン (pan) — bread',strokes:3},
+      {c:'ピ',r:'pi',ex:'ピアノ (piano) — piano',strokes:3},
+      {c:'プ',r:'pu',ex:'プール (puuru) — pool',strokes:2},
+      {c:'ペ',r:'pe',ex:'ペン (pen) — pen',strokes:2},
+      {c:'ポ',r:'po',ex:'ポスト (posuto) — mailbox',strokes:5}
+    ],
+    yoon: [
+      {c:'キャ',r:'kya',ex:'キャラクター (kyarakutaa) — character',strokes:5},
+      {c:'キュ',r:'kyu',ex:'キューバ (kyuuba) — Cuba',strokes:5},
+      {c:'キョ',r:'kyo',ex:'キョウト (kyouto) — Kyoto',strokes:5},
+      {c:'シャ',r:'sha',ex:'シャワー (shawaa) — shower',strokes:4},
+      {c:'シュ',r:'shu',ex:'シュークリーム (shuukuriimu) — cream puff',strokes:5},
+      {c:'ショ',r:'sho',ex:'ショッピング (shoppingu) — shopping',strokes:5},
+      {c:'チャ',r:'cha',ex:'チャンス (chansu) — chance',strokes:6},
+      {c:'チュ',r:'chu',ex:'チューリップ (chuurippu) — tulip',strokes:5},
+      {c:'チョ',r:'cho',ex:'チョコレート (chokoreeto) — chocolate',strokes:5},
+      {c:'ニャ',r:'nya',ex:'(combined sound)',strokes:4},
+      {c:'ニュ',r:'nyu',ex:'ニュース (nyuusu) — news',strokes:4},
+      {c:'ニョ',r:'nyo',ex:'(combined sound)',strokes:5},
+      {c:'ヒャ',r:'hya',ex:'ヒャク (hyaku) — 100',strokes:4},
+      {c:'ヒュ',r:'hyu',ex:'(combined sound)',strokes:4},
+      {c:'ヒョ',r:'hyo',ex:'(combined sound)',strokes:5},
+      {c:'ミャ',r:'mya',ex:'(combined sound)',strokes:5},
+      {c:'ミュ',r:'myu',ex:'ミュージック (myuujikku) — music',strokes:5},
+      {c:'ミョ',r:'myo',ex:'(combined sound)',strokes:5},
+      {c:'リャ',r:'rya',ex:'(combined sound)',strokes:4},
+      {c:'リュ',r:'ryu',ex:'リュック (ryukku) — backpack',strokes:4},
+      {c:'リョ',r:'ryo',ex:'リョコウ — travel',strokes:5},
+      {c:'ギャ',r:'gya',ex:'(combined sound)',strokes:5},
+      {c:'ギュ',r:'gyu',ex:'(combined sound)',strokes:6},
+      {c:'ギョ',r:'gyo',ex:'ギョウザ (gyouza) — dumplings',strokes:6},
+      {c:'ジャ',r:'ja',ex:'ジャケット (jaketto) — jacket',strokes:5},
+      {c:'ジュ',r:'ju',ex:'ジュース (juusu) — juice',strokes:5},
+      {c:'ジョ',r:'jo',ex:'ジョギング (jogingu) — jogging',strokes:5},
+      {c:'ビャ',r:'bya',ex:'(combined sound)',strokes:5},
+      {c:'ビュ',r:'byu',ex:'ビュッフェ (byuffe) — buffet',strokes:5},
+      {c:'ビョ',r:'byo',ex:'(combined sound)',strokes:6},
+      {c:'ピャ',r:'pya',ex:'(combined sound)',strokes:5},
+      {c:'ピュ',r:'pyu',ex:'(combined sound)',strokes:5},
+      {c:'ピョ',r:'pyo',ex:'(combined sound)',strokes:6}
+    ]
+  },
+  numbers: {
+    seion: [
+      {c:'一',r:'ichi — 1',ex:'一日 (ichinichi) — one day',strokes:1},
+      {c:'二',r:'ni — 2',ex:'二人 (futari) — two people',strokes:2},
+      {c:'三',r:'san — 3',ex:'三月 (sangatsu) — March',strokes:3},
+      {c:'四',r:'shi/yon — 4',ex:'四季 (shiki) — four seasons',strokes:5},
+      {c:'五',r:'go — 5',ex:'五月 (gogatsu) — May',strokes:4},
+      {c:'六',r:'roku — 6',ex:'六時 (rokuji) — 6 o\'clock',strokes:4},
+      {c:'七',r:'shichi/nana — 7',ex:'七夕 (tanabata) — Star Festival',strokes:2},
+      {c:'八',r:'hachi — 8',ex:'八月 (hachigatsu) — August',strokes:2},
+      {c:'九',r:'ku/kyuu — 9',ex:'九時 (kuji) — 9 o\'clock',strokes:2},
+      {c:'十',r:'juu — 10',ex:'十分 (juppun) — 10 minutes',strokes:2},
+      {c:'百',r:'hyaku — 100',ex:'百円 (hyakuen) — 100 yen',strokes:6},
+      {c:'千',r:'sen — 1,000',ex:'千円 (senen) — 1000 yen',strokes:3}
+    ],
+    dakuon:[],handakuon:[],yoon:[]
+  }
+};
+
+const BADGES = [
+  {id:'hiragana_seion',icon:'🌸',name:'Hiragana Seion',cat:'hiragana',subcat:'seion'},
+  {id:'hiragana_dakuon',icon:'🔥',name:'Hiragana Dakūon',cat:'hiragana',subcat:'dakuon'},
+  {id:'hiragana_yoon',icon:'🌟',name:'Hiragana Yōon',cat:'hiragana',subcat:'yoon'},
+  {id:'katakana_seion',icon:'⚡',name:'Katakana Seion',cat:'katakana',subcat:'seion'},
+  {id:'katakana_dakuon',icon:'🎯',name:'Katakana Dakūon',cat:'katakana',subcat:'dakuon'},
+  {id:'katakana_yoon',icon:'🏆',name:'Katakana Yōon',cat:'katakana',subcat:'yoon'},
+  {id:'numbers',icon:'🔢',name:'Number Master',cat:'numbers',subcat:'seion'},
+  {id:'all_hiragana',icon:'🎌',name:'Hiragana Master',cat:null,subcat:null},
+  {id:'speed_demon',icon:'⏱️',name:'Speed Demon',cat:null,subcat:null}
+];
+
+const LEVELS = [
+  {name:'🌱 Beginner',xp:0},
+  {name:'📖 Elementary',xp:50},
+  {name:'✏️ Intermediate',xp:150},
+  {name:'🎓 Advanced',xp:300},
+  {name:'🏯 Master',xp:600}
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+
+let userName = localStorage.getItem('jp_username') || '';
+let userAvatar = localStorage.getItem('jp_avatar') || '🐼';
+let selectedAvatar = '🐼';
+
+let cat='hiragana', subcat='seion', idx=0;
+let drawing=false, drawEnabled=false;
+let lx=0, ly=0;
+let penColor='#1a1209', penThickness=5;
+let shuffleMode=false;
+let shuffledList=[];
+let timerInterval=null, timerSeconds=60, timerScore=0;
+// These are loaded after username is known (see loadUserData)
+let xp=0;
+let earnedBadges=[];
+let goalTarget=10;
+let goalDone=0;
+let goalDate='';
+
+function userKey(k){ return 'jp_'+userName+'_'+k; }
+function loadUserData(){
+  xp=parseInt(localStorage.getItem(userKey('xp'))||'0');
+  earnedBadges=JSON.parse(localStorage.getItem(userKey('badges'))||'[]');
+  goalTarget=parseInt(localStorage.getItem(userKey('goal'))||'10');
+  goalDone=parseInt(localStorage.getItem(userKey('goal_done'))||'0');
+  goalDate=localStorage.getItem(userKey('goal_date'))||'';
+}
+let darkMode=localStorage.getItem('jp_dark')==='1';
+let deferredInstall=null;
+
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const wrap=document.getElementById('canvas-wrap');
+const badge=document.getElementById('mode-badge');
+const bottomEl=document.getElementById('canvas-bottom');
+const hintEl=document.getElementById('enter-hint');
+const isTouch=('ontouchstart' in window)||window.matchMedia('(pointer: coarse)').matches;
+
+
+// ═══════════════════════════════════════════
+// USER IDENTITY
+// ═══════════════════════════════════════════
+function selectAvatar(el){
+  document.querySelectorAll('.avatar-opt').forEach(a=>a.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAvatar=el.getAttribute('data-avatar');
+}
+
+// Active sessions key — stores list of currently logged-in usernames
+function getActiveSessions(){ try{ return JSON.parse(localStorage.getItem('jp_active_sessions')||'[]'); }catch(e){return[];} }
+function setActiveSessions(arr){ localStorage.setItem('jp_active_sessions', JSON.stringify(arr)); }
+function markActive(name){ const s=getActiveSessions(); if(!s.includes(name)){ s.push(name); setActiveSessions(s); } }
+function markInactive(name){ const s=getActiveSessions().filter(n=>n!==name); setActiveSessions(s); }
+function isNameTaken(name){ return getActiveSessions().includes(name.toLowerCase()); }
+
+function startPractice(){
+  const input=document.getElementById('username-input');
+  const errEl=document.getElementById('name-error');
+  const name=input.value.trim();
+  if(!name){
+    input.focus(); input.style.borderColor='var(--accent)';
+    showToast('Please enter your name!'); return;
+  }
+  // Check if name is already in use by another active session
+  if(isNameTaken(name.toLowerCase())){
+    input.style.borderColor='var(--accent)';
+    errEl.style.display='block';
+    errEl.textContent='⚠️ "'+name+'" is currently in use. Choose a different name.';
+    input.focus(); return;
+  }
+  errEl.style.display='none';
+  input.style.borderColor='';
+  userName=name;
+  userAvatar=selectedAvatar;
+  localStorage.setItem('jp_username',userName);
+  localStorage.setItem('jp_avatar',userAvatar);
+  markActive(userName.toLowerCase());
+  loadUserData();
+  checkGoalReset();
+  updateGoalUI();
+  updateLevelUI();
+  buildBadges();
+  document.getElementById('welcome-screen').classList.add('hidden');
+  showUserChip();
+  showToast('ようこそ '+userName+'! Welcome! 🎉');
+}
+
+function showUserChip(){
+  const chip=document.getElementById('user-chip');
+  document.getElementById('header-avatar').textContent=userAvatar;
+  document.getElementById('header-name').textContent=userName;
+  chip.style.display='flex';
+  document.getElementById('logout-btn').style.display='block';
+}
+
+function logout(){
+  if(!confirm('Log out as '+userName+'? Your progress is saved.')) return;
+  markInactive(userName.toLowerCase());
+  localStorage.removeItem('jp_username');
+  localStorage.removeItem('jp_avatar');
+  userName=''; userAvatar='🐼';
+  document.getElementById('user-chip').style.display='none';
+  document.getElementById('logout-btn').style.display='none';
+  document.getElementById('welcome-screen').classList.remove('hidden');
+  document.getElementById('username-input').value='';
+  document.getElementById('name-error').style.display='none';
+  document.querySelectorAll('.avatar-opt').forEach((a,i)=>a.classList.toggle('selected',i===0));
+  selectedAvatar='🐼';
+  showToast('Logged out. See you next time! 👋');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init(){
+  if(darkMode) document.getElementById('app').setAttribute('data-dark','');
+  // If user already set their name, skip welcome screen
+  if(userName){
+    markActive(userName.toLowerCase());
+    loadUserData();
+    document.getElementById('welcome-screen').classList.add('hidden');
+    showUserChip();
+    // Pre-fill avatar in welcome screen in case they reset later
+    userAvatar=localStorage.getItem('jp_avatar')||'🐼';
+    document.querySelectorAll('.avatar-opt').forEach(a=>{
+      a.classList.toggle('selected',a.getAttribute('data-avatar')===userAvatar);
+    });
+  } else {
+    // Show welcome, hide main app content behind it (welcome is fixed overlay)
+  }
+  checkGoalReset();
+  buildControls();
+  buildBadges();
+  updateGoalUI();
+  updateLevelUI();
+  resizeCanvas();
+  updateDisplay();
+  filterSubtabs();
+}
+
+function checkGoalReset(){
+  const today=new Date().toDateString();
+  if(goalDate!==today){ goalDone=0; goalDate=today; saveGoalState(); }
+}
+
+function filterSubtabs(){
+  // hide subtabs with no data for numbers
+  const subs=document.querySelectorAll('.subtab');
+  subs.forEach(s=>{
+    const sc=s.getAttribute('onclick').match(/'(\w+)'/)[1];
+    const hasData=DATA[cat][sc]&&DATA[cat][sc].length>0;
+    s.style.display=hasData?'':'none';
+  });
+  // if current subcat has no data, switch to seion
+  if(!DATA[cat][subcat]||DATA[cat][subcat].length===0){
+    subcat='seion';
+    document.querySelectorAll('.subtab').forEach(s=>{
+      s.classList.toggle('active',s.getAttribute('onclick').includes("'seion'"));
+    });
+  }
+}
+
+function buildControls(){
+  if(isTouch){
+    bottomEl.innerHTML=`
+      <button class="btn-draw" id="draw-toggle-btn" onclick="toggleDraw()">✏️ Tap to Start Drawing</button>
+      <div class="btn-row">
+        <button class="btn" onclick="clearCanvas()">↺ Clear</button>
+        <button class="btn" onclick="prevChar()">← Prev</button>
+        <button class="btn btn-next" onclick="nextChar()">Next →</button>
+      </div>`;
+    badge.textContent='tap button to draw';
+    hintEl.innerHTML='Tap <strong>Start Drawing</strong> then draw with your finger';
+  } else {
+    bottomEl.innerHTML=`
+      <button class="btn-draw" id="draw-toggle-btn" onclick="toggleDraw()">✏️ Click / Enter to Start Drawing</button>
+      <div class="btn-row">
+        <button class="btn" onclick="clearCanvas()">↺ Clear</button>
+        <button class="btn" onclick="prevChar()">← Prev</button>
+        <button class="btn btn-next" onclick="nextChar()">Next →</button>
+      </div>`;
+    badge.textContent='press Enter to draw';
+    hintEl.innerHTML='Press <span class="key-badge">Enter</span> to draw · '
+      +'<span class="key-badge">Enter</span> again to stop · '
+      +'<span class="key-badge">→</span> next · <span class="key-badge">←</span> prev · '
+      +'<span class="key-badge">C</span> clear';
+  }
+}
+
+// ═══════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════
+function resizeCanvas(){
+  const r=wrap.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=r.width*dpr; canvas.height=r.height*dpr;
+  canvas.style.width=r.width+'px'; canvas.style.height=r.height+'px';
+  ctx.scale(dpr,dpr);
+  applyCtxStyle();
+}
+function applyCtxStyle(){
+  ctx.strokeStyle=penColor; ctx.lineWidth=penThickness;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+}
+function getXY(e){
+  const r=canvas.getBoundingClientRect();
+  const s=e.touches&&e.touches.length?e.touches[0]:e;
+  return{x:s.clientX-r.left,y:s.clientY-r.top};
+}
+canvas.addEventListener('mousedown',e=>{
+  if(!drawEnabled)return; drawing=true; const p=getXY(e);lx=p.x;ly=p.y;
+});
+canvas.addEventListener('mousemove',e=>{
+  if(!drawing||!drawEnabled)return;
+  applyCtxStyle();
+  const p=getXY(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;
+});
+canvas.addEventListener('mouseup',()=>{drawing=false;});
+canvas.addEventListener('mouseleave',()=>{drawing=false;});
+canvas.addEventListener('touchstart',e=>{
+  if(!drawEnabled)return; e.preventDefault(); drawing=true; const p=getXY(e);lx=p.x;ly=p.y;
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  if(!drawing||!drawEnabled)return; e.preventDefault();
+  applyCtxStyle();
+  const p=getXY(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;
+},{passive:false});
+canvas.addEventListener('touchend',()=>{drawing=false;});
+canvas.addEventListener('touchcancel',()=>{drawing=false;});
+
+function clearCanvas(){
+  const r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);
+}
+
+// ═══════════════════════════════════════════
+// DRAW TOGGLE
+// ═══════════════════════════════════════════
+function toggleDraw(){
+  drawEnabled=!drawEnabled; drawing=false;
+  const btn=document.getElementById('draw-toggle-btn');
+  if(btn){
+    btn.textContent=drawEnabled
+      ?'🛑 Stop Drawing'
+      :(isTouch?'✏️ Tap to Start Drawing':'✏️ Click / Enter to Start Drawing');
+    btn.classList.toggle('active',drawEnabled);
+  }
+  badge.textContent=drawEnabled?'● drawing ON':(isTouch?'tap button to draw':'press Enter to draw');
+  badge.classList.toggle('on',drawEnabled);
+}
+
+// Laptop keyboard
+document.addEventListener('keydown',e=>{
+  if(isTouch)return;
+  if(e.key==='Enter'){e.preventDefault();toggleDraw();}
+  if(e.key==='ArrowRight')nextChar();
+  if(e.key==='ArrowLeft')prevChar();
+  if(e.key==='c'||e.key==='C')clearCanvas();
+});
+
+// ═══════════════════════════════════════════
+// PEN
+// ═══════════════════════════════════════════
+function setPenColor(color,btn){
+  penColor=color;
+  document.querySelectorAll('.tool-btn').forEach(b=>{
+    if(b.id&&b.id.startsWith('pen-'))b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  // sync dots
+  ['black','red','blue'].forEach(n=>{
+    const d=document.getElementById('dot-'+n);
+    if(d)d.classList.toggle('active',d.style.background===color||(n==='black'&&color==='#1a1209')||(n==='red'&&color==='#c0392b')||(n==='blue'&&color==='#1a5fa8'));
+  });
+}
+function setPenColorDot(color,dot){
+  penColor=color;
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+  dot.classList.add('active');
+}
+function setPenThickness(v){
+  penThickness=parseInt(v);
+  document.querySelectorAll('.thickness-slider,#thickness-range').forEach(s=>s.value=v);
+}
+
+// ═══════════════════════════════════════════
+// SHUFFLE
+// ═══════════════════════════════════════════
+function toggleShuffle(){
+  shuffleMode=!shuffleMode;
+  document.getElementById('shuffle-btn').classList.toggle('active',shuffleMode);
+  document.getElementById('shuffle-btn').textContent=shuffleMode?'🔀 Shuffle ON':'🔀 Shuffle';
+  if(shuffleMode){
+    const list=[...currentList()];
+    for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
+    shuffledList=list; idx=0;
+  }
+  updateDisplay(); clearCanvas();
+}
+function currentList(){ return shuffleMode?shuffledList:(DATA[cat][subcat]||[]); }
+
+// ═══════════════════════════════════════════
+// DISPLAY
+// ═══════════════════════════════════════════
+function updateDisplay(){
+  const list=currentList();
+  if(!list||list.length===0)return;
+  const item=list[idx];
+  document.getElementById('target-char').textContent=item.c;
+  document.getElementById('target-romaji').textContent=item.r;
+  document.getElementById('target-type').textContent=
+    (cat.charAt(0).toUpperCase()+cat.slice(1))+' · '+(subcat.charAt(0).toUpperCase()+subcat.slice(1));
+  document.getElementById('guide-char').textContent=item.c;
+  document.getElementById('stroke-hint').textContent=item.strokes?'✏️ '+item.strokes+' stroke'+(item.strokes>1?'s':''):'';
+  const ex=document.getElementById('example-word');
+  if(item.ex&&item.ex!=='(rare usage)'&&!item.ex.startsWith('(combined')){
+    const parts=item.ex.match(/^([^\(]+)\(([^\)]+)\)(.*)$/);
+    if(parts) ex.innerHTML='<span>'+parts[1]+'</span>('+parts[2]+')'+parts[3];
+    else ex.textContent=item.ex;
+    ex.style.display='block';
+  } else { ex.style.display='none'; }
+  document.getElementById('progress-label').textContent=(idx+1)+' / '+list.length;
+  document.getElementById('progress-fill').style.width=Math.max(2,Math.round(((idx+1)/list.length)*100))+'%';
+}
+
+// ═══════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════
+function speak(){
+  const list=currentList();
+  if(!list||!list[idx])return;
+  const r=list[idx].r.replace(/—.*/,'').replace(/\/.*/,'').trim().split(' ')[0];
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(list[idx].c);
+    u.lang='ja-JP'; u.rate=0.8;
+    window.speechSynthesis.speak(u);
+    showToast('🔊 '+r);
+  } else { showToast('Audio not supported in this browser'); }
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function prevChar(){
+  if(idx>0){idx--;updateDisplay();clearCanvas();showToast('← '+currentList()[idx].c);}
+  else showToast('Already at the first character');
+}
+
+function nextChar(){
+  const list=currentList();
+  // haptic
+  if(navigator.vibrate)navigator.vibrate(30);
+  if(idx<list.length-1){
+    const prev=list[idx].c; idx++;
+    updateDisplay(); clearCanvas();
+    gainXP(1);
+    updateGoalDone();
+    if(timerInterval)timerScore++;
+    document.getElementById('timer-score').textContent=timerScore;
+    showToast('✓ '+prev+' → next');
+  } else {
+    gainXP(5);
+    updateGoalDone();
+    checkBadge();
+    showComplete(list);
+  }
+}
+
+function updateGoalDone(){
+  goalDone=Math.min(goalDone+1,goalTarget*2);
+  saveGoalState();
+  updateGoalUI();
+}
+function saveGoalState(){
+  localStorage.setItem(userKey('goal_done'),goalDone);
+  localStorage.setItem(userKey('goal_date'),goalDate);
+}
+function updateGoalUI(){
+  document.getElementById('goal-done').textContent=goalDone;
+  document.getElementById('goal-target').textContent=goalTarget;
+  const pct=Math.min(100,Math.round((goalDone/goalTarget)*100));
+  document.getElementById('goal-fill').style.width=pct+'%';
+  if(goalDone>=goalTarget) showToast('🎯 Daily goal reached!');
+}
+
+// ═══════════════════════════════════════════
+// XP & LEVELS
+// ═══════════════════════════════════════════
+function gainXP(amount){
+  xp+=amount; localStorage.setItem(userKey('xp'),xp); updateLevelUI();
+}
+function updateLevelUI(){
+  let level=LEVELS[0];
+  for(const l of LEVELS){ if(xp>=l.xp)level=l; }
+  const li=LEVELS.indexOf(level);
+  const next=LEVELS[li+1];
+  document.getElementById('level-name').textContent=level.name;
+  if(next){
+    const pct=Math.round(((xp-level.xp)/(next.xp-level.xp))*100);
+    document.getElementById('level-fill').style.width=Math.min(100,pct)+'%';
+    document.getElementById('level-xp').textContent=xp+' / '+next.xp+' XP';
+  } else {
+    document.getElementById('level-fill').style.width='100%';
+    document.getElementById('level-xp').textContent='MAX LEVEL 🏆';
+  }
+}
+
+// ═══════════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════════
+function buildBadges(){
+  const grid=document.getElementById('badges-grid');
+  grid.innerHTML=BADGES.map(b=>`
+    <div class="badge-item ${earnedBadges.includes(b.id)?'earned':''}" id="badge_${b.id}" title="${b.name}">
+      <span class="badge-icon">${b.icon}</span>
+      <span class="badge-name">${b.name}</span>
+    </div>`).join('');
+}
+function checkBadge(){
+  const newBadges=[];
+  BADGES.forEach(b=>{
+    if(earnedBadges.includes(b.id))return;
+    if(b.cat&&b.subcat&&b.cat===cat&&b.subcat===subcat){ earnedBadges.push(b.id); newBadges.push(b); }
+    if(b.id==='all_hiragana'){
+      const done=['seion','dakuon','handakuon','yoon'].every(s=>
+        earnedBadges.includes('hiragana_'+s)
+      );
+      if(done){ earnedBadges.push(b.id); newBadges.push(b); }
+    }
+  });
+  if(newBadges.length){
+    localStorage.setItem(userKey('badges'),JSON.stringify(earnedBadges));
+    buildBadges();
+    newBadges.forEach(b=>showToast('🏅 Badge earned: '+b.name));
+  }
+}
+
+// ═══════════════════════════════════════════
+// TIMER CHALLENGE
+// ═══════════════════════════════════════════
+function startTimer(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('timer-bar').classList.remove('show'); return; }
+  timerSeconds=60; timerScore=0;
+  document.getElementById('timer-bar').classList.add('show');
+  document.getElementById('timer-fill').style.width='100%';
+  document.getElementById('timer-score').textContent='0';
+  timerInterval=setInterval(()=>{
+    timerSeconds--;
+    document.getElementById('timer-num').textContent=timerSeconds;
+    document.getElementById('timer-fill').style.width=Math.round((timerSeconds/60)*100)+'%';
+    if(timerSeconds<=0){
+      clearInterval(timerInterval); timerInterval=null;
+      document.getElementById('timer-bar').classList.remove('show');
+      showToast('⏱ Time\'s up! You wrote '+timerScore+' characters!');
+      gainXP(timerScore);
+      if(timerScore>=10){ earnedBadges.push('speed_demon'); localStorage.setItem(userKey('badges'),JSON.stringify(earnedBadges)); buildBadges(); showToast('🏅 Speed Demon badge earned!'); }
+    }
+  },1000);
+}
+
+// ═══════════════════════════════════════════
+// CATEGORY / SUBCAT
+// ═══════════════════════════════════════════
+function setCategory(c,btn){
+  cat=c; subcat='seion'; idx=0;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('.subtab').forEach(s=>s.classList.toggle('active',s.getAttribute('onclick').includes("'seion'")));
+  filterSubtabs();
+  document.getElementById('practice-area').style.display='grid';
+  hintEl.style.display='block';
+  document.getElementById('complete-screen').classList.remove('show');
+  if(shuffleMode){const list=[...DATA[cat][subcat]];for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}shuffledList=list;}
+  updateDisplay(); clearCanvas();
+}
+function setSubcat(sc,btn){
+  if(!DATA[cat][sc]||DATA[cat][sc].length===0)return;
+  subcat=sc; idx=0;
+  document.querySelectorAll('.subtab').forEach(s=>s.classList.remove('active')); btn.classList.add('active');
+  document.getElementById('practice-area').style.display='grid';
+  hintEl.style.display='block';
+  document.getElementById('complete-screen').classList.remove('show');
+  if(shuffleMode){const list=[...DATA[cat][subcat]];for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}shuffledList=list;}
+  updateDisplay(); clearCanvas();
+}
+
+// ═══════════════════════════════════════════
+// COMPLETE
+// ═══════════════════════════════════════════
+function showComplete(list){
+  document.getElementById('practice-area').style.display='none';
+  hintEl.style.display='none';
+  const cs=document.getElementById('complete-screen');
+  cs.classList.add('show');
+  document.getElementById('complete-sub').textContent='You finished all '+list.length+' characters in '+cat+' '+subcat+'!';
+  const cb=document.getElementById('complete-badges');
+  cb.innerHTML=earnedBadges.map(id=>{
+    const b=BADGES.find(x=>x.id===id);
+    return b?`<div class="earned-badge"><div class="b-icon">${b.icon}</div><div class="b-name">${b.name}</div></div>`:'';
+  }).join('');
+}
+function restartSet(){
+  idx=0;
+  document.getElementById('practice-area').style.display='grid';
+  hintEl.style.display='block';
+  document.getElementById('complete-screen').classList.remove('show');
+  updateDisplay(); clearCanvas();
+}
+
+// ═══════════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════════
+function toggleDark(){
+  darkMode=!darkMode;
+  document.getElementById('app').toggleAttribute('data-dark',darkMode);
+  localStorage.setItem('jp_dark',darkMode?'1':'0');
+  document.getElementById('dark-btn').textContent=darkMode?'☀️':'🌙';
+}
+
+// ═══════════════════════════════════════════
+// GOAL MODAL
+// ═══════════════════════════════════════════
+function openGoalModal(){
+  document.getElementById('goal-input').value=goalTarget;
+  document.getElementById('goal-modal').style.display='flex';
+}
+function closeGoalModal(){ document.getElementById('goal-modal').style.display='none'; }
+function saveGoal(){
+  goalTarget=parseInt(document.getElementById('goal-input').value)||10;
+  localStorage.setItem(userKey('goal'),goalTarget);
+  updateGoalUI(); closeGoalModal();
+  showToast('🎯 Daily goal set to '+goalTarget);
+}
+
+// ═══════════════════════════════════════════
+// INSTALL PWA
+// ═══════════════════════════════════════════
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredInstall=e;
+  document.getElementById('install-banner').classList.add('show');
+});
+function installApp(){
+  if(deferredInstall){ deferredInstall.prompt(); }
+  document.getElementById('install-banner').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ═══════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════
+window.addEventListener('resize',resizeCanvas);
+window.addEventListener('beforeunload',()=>{ if(userName) markInactive(userName.toLowerCase()); });
+setTimeout(()=>{init();},100);
+</script>
+</body>
+</html>
