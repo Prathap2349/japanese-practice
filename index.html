@@ -196,6 +196,51 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .user-avatar-sm{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--paper2)}
 .user-name-sm{font-size:12px;color:var(--ink);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Date / study log bar */
+.date-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding:9px 14px;background:var(--paper2);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all 0.15s}
+.date-bar:hover{border-color:var(--accent)}
+.date-jp{font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--ink);flex:1}
+.date-jp small{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;display:block;margin-top:1px}
+.streak-chip{font-size:11px;background:var(--accent);color:#fff;padding:3px 9px;border-radius:12px;white-space:nowrap}
+
+/* Study log modal */
+.log-list{max-height:260px;overflow-y:auto;margin-bottom:1rem}
+.log-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px}
+.log-row:last-child{border-bottom:none}
+.log-row .log-date{color:var(--ink)}
+.log-row .log-count{color:var(--muted);font-size:11px}
+.log-empty{text-align:center;color:var(--muted);font-size:12px;padding:1.5rem 0}
+
+/* View toggle (practice vs sheet) */
+.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.view-toggle button{padding:6px 12px;font-size:11px;border:none;background:var(--paper);color:var(--ink);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s}
+.view-toggle button.active{background:var(--ink);color:var(--paper)}
+.view-toggle button:not(:last-child){border-right:1px solid var(--border)}
+
+/* Sheet / reference view */
+.sheet-view{display:none}
+.sheet-view.show{display:block}
+.sheet-section{margin-bottom:1.5rem}
+.sheet-section-title{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:500;display:flex;align-items:center;gap:8px}
+.sheet-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.sheet-cell{background:white;border:1.5px solid var(--border);border-radius:7px;padding:8px 4px 6px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative}
+[data-dark] .sheet-cell{background:var(--paper2)}
+.sheet-cell:hover{border-color:var(--accent);transform:translateY(-2px)}
+.sheet-cell .sc-char{font-family:'Noto Sans JP',sans-serif;font-size:24px;line-height:1;margin-bottom:2px}
+.sheet-cell .sc-romaji{font-size:9px;color:var(--muted);letter-spacing:0.03em}
+.sheet-cell .sc-note-dot{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent2)}
+.sheet-empty{text-align:center;color:var(--muted);font-size:12px;padding:2rem 0}
+
+/* Keyword / memory note */
+.note-box{width:100%;margin-top:10px;max-width:220px}
+.note-label{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;text-align:center}
+.note-input{width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;background:var(--paper2);color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;resize:none;outline:none;transition:border 0.15s}
+.note-input:focus{border-color:var(--accent)}
+[data-dark] .note-input{background:var(--paper)}
+.note-saved{font-size:9px;color:var(--green);text-align:center;margin-top:3px;height:11px;opacity:0;transition:opacity 0.2s}
+.note-saved.show{opacity:1}
+
 </style>
 </head>
 <body>
@@ -251,6 +296,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <button onclick="document.getElementById('install-banner').classList.remove('show')" style="background:transparent;border:none;color:#fff;font-size:16px;cursor:pointer">✕</button>
   </div>
 
+  <!-- Date / study log bar -->
+  <div class="date-bar" onclick="openLogModal()" title="View study log">
+    <div class="date-jp" id="date-jp">今日 — <small id="date-en"></small></div>
+    <span class="streak-chip" id="streak-chip">🔥 0 day streak</span>
+  </div>
+
   <!-- Level bar -->
   <div class="level-bar">
     <span class="level-name" id="level-name">🌱 Beginner</span>
@@ -288,6 +339,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 
   <!-- Toolbar -->
   <div class="toolbar">
+    <div class="view-toggle">
+      <button class="active" id="view-practice-btn" onclick="setView('practice')">✏️ Practice</button>
+      <button id="view-sheet-btn" onclick="setView('sheet')">📋 Sheet View</button>
+    </div>
+    <div class="tool-sep"></div>
     <button class="tool-btn" id="shuffle-btn" onclick="toggleShuffle()">🔀 Shuffle</button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="startTimer()">⏱ 60s Challenge</button>
@@ -318,6 +374,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
       <div class="stroke-hint" id="stroke-hint"></div>
       <div class="example-word" id="example-word"></div>
       <button class="audio-btn" onclick="speak()" id="audio-btn">🔊 Hear it</button>
+      <div class="note-box">
+        <div class="note-label">💡 Your memory tip / keyword</div>
+        <textarea class="note-input" id="note-input" rows="2" placeholder="e.g. looks like a fishhook…" oninput="onNoteInput()" onblur="saveNote()"></textarea>
+        <div class="note-saved" id="note-saved">✓ saved</div>
+      </div>
     </div>
 
     <!-- Right: canvas -->
@@ -341,6 +402,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
       <div class="canvas-bottom" id="canvas-bottom"></div>
     </div>
   </div>
+
+  <!-- Sheet / reference view -->
+  <div class="sheet-view" id="sheet-view"></div>
 
   <!-- Badges -->
   <div class="badges-panel">
@@ -371,6 +435,16 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
       <button class="btn" onclick="closeGoalModal()">Cancel</button>
       <button class="btn btn-next" onclick="saveGoal()">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- Study log modal -->
+<div id="log-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--paper);border-radius:12px;padding:1.5rem;max-width:340px;width:90%;margin:auto">
+    <div style="font-size:14px;font-weight:500;margin-bottom:4px">📅 Study Log</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:1rem" id="log-modal-today"></div>
+    <div class="log-list" id="log-list"></div>
+    <button class="btn" style="width:100%" onclick="closeLogModal()">Close</button>
   </div>
 </div>
 
@@ -667,6 +741,10 @@ let earnedBadges=[];
 let goalTarget=10;
 let goalDone=0;
 let goalDate='';
+let currentView='practice'; // 'practice' | 'sheet'
+let userNotes={};   // { "cat_char": "note text" }
+let studyLog={};    // { "YYYY-M-D": count }
+let noteSaveTimer=null;
 
 function userKey(k){ return 'jp_'+userName+'_'+k; }
 function loadUserData(){
@@ -675,6 +753,8 @@ function loadUserData(){
   goalTarget=parseInt(localStorage.getItem(userKey('goal'))||'10');
   goalDone=parseInt(localStorage.getItem(userKey('goal_done'))||'0');
   goalDate=localStorage.getItem(userKey('goal_date'))||'';
+  userNotes=JSON.parse(localStorage.getItem(userKey('notes'))||'{}');
+  studyLog=JSON.parse(localStorage.getItem(userKey('studylog'))||'{}');
 }
 let darkMode=localStorage.getItem('jp_dark')==='1';
 let deferredInstall=null;
@@ -730,9 +810,11 @@ function startPractice(){
   checkGoalReset();
   updateGoalUI();
   updateLevelUI();
+  updateDateBar();
   buildBadges();
   document.getElementById('welcome-screen').classList.add('hidden');
   showUserChip();
+  loadNoteForCurrent();
   showToast('ようこそ '+userName+'! Welcome! 🎉');
 }
 
@@ -757,7 +839,138 @@ function logout(){
   document.getElementById('name-error').style.display='none';
   document.querySelectorAll('.avatar-opt').forEach((a,i)=>a.classList.toggle('selected',i===0));
   selectedAvatar='🐼';
+  userNotes={}; studyLog={};
+  document.getElementById('note-input').value='';
+  setView('practice');
+  updateDateBar();
   showToast('Logged out. See you next time! 👋');
+}
+
+// ═══════════════════════════════════════════
+// DATE, STUDY LOG & STREAK
+// ═══════════════════════════════════════════
+const JP_WEEKDAYS=['日','月','火','水','木','金','土'];
+function dateKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function formatJPDate(d){
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 ('+JP_WEEKDAYS[d.getDay()]+'曜日)';
+}
+function updateDateBar(){
+  const now=new Date();
+  document.getElementById('date-jp').innerHTML='📅 '+formatJPDate(now)+'<small>'+now.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'</small>';
+  document.getElementById('streak-chip').textContent='🔥 '+computeStreak()+' day streak';
+}
+function recordStudyDay(){
+  if(!userName)return;
+  const k=dateKey(new Date());
+  studyLog[k]=(studyLog[k]||0)+1;
+  localStorage.setItem(userKey('studylog'),JSON.stringify(studyLog));
+  updateDateBar();
+}
+function computeStreak(){
+  let streak=0;
+  let d=new Date();
+  // if nothing logged today yet, start checking from today anyway; a day only counts if present in log
+  while(true){
+    const k=dateKey(d);
+    if(studyLog[k]){ streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function openLogModal(){
+  document.getElementById('log-modal-today').textContent=formatJPDate(new Date());
+  const entries=Object.keys(studyLog).sort((a,b)=>{
+    const da=a.split('-').map(Number), dbb=b.split('-').map(Number);
+    return new Date(dbb[0],dbb[1]-1,dbb[2]) - new Date(da[0],da[1]-1,da[2]);
+  });
+  const list=document.getElementById('log-list');
+  if(!entries.length){
+    list.innerHTML='<div class="log-empty">No study sessions logged yet.<br>Practice a character to start your streak! 🔥</div>';
+  } else {
+    list.innerHTML=entries.map(k=>{
+      const parts=k.split('-').map(Number);
+      const d=new Date(parts[0],parts[1]-1,parts[2]);
+      return `<div class="log-row"><span class="log-date">${formatJPDate(d)}</span><span class="log-count">${studyLog[k]} chars</span></div>`;
+    }).join('');
+  }
+  document.getElementById('log-modal').style.display='flex';
+}
+function closeLogModal(){ document.getElementById('log-modal').style.display='none'; }
+
+// ═══════════════════════════════════════════
+// PERSONAL NOTES / KEYWORDS
+// ═══════════════════════════════════════════
+function noteKey(item){ return cat+'_'+item.c; }
+function loadNoteForCurrent(){
+  const list=currentList();
+  const box=document.getElementById('note-input');
+  if(!list||!list[idx]||!box){ if(box)box.value=''; return; }
+  box.value=userNotes[noteKey(list[idx])]||'';
+  document.getElementById('note-saved').classList.remove('show');
+}
+function onNoteInput(){
+  clearTimeout(noteSaveTimer);
+  noteSaveTimer=setTimeout(saveNote,600);
+}
+function saveNote(){
+  const list=currentList();
+  if(!list||!list[idx]||!userName)return;
+  const box=document.getElementById('note-input');
+  const val=box.value.trim();
+  const key=noteKey(list[idx]);
+  if(val) userNotes[key]=val; else delete userNotes[key];
+  localStorage.setItem(userKey('notes'),JSON.stringify(userNotes));
+  const saved=document.getElementById('note-saved');
+  saved.classList.add('show');
+  setTimeout(()=>saved.classList.remove('show'),1200);
+  if(currentView==='sheet') buildSheetView();
+}
+
+// ═══════════════════════════════════════════
+// VIEW TOGGLE: PRACTICE vs SHEET
+// ═══════════════════════════════════════════
+function setView(v){
+  currentView=v;
+  document.getElementById('view-practice-btn').classList.toggle('active',v==='practice');
+  document.getElementById('view-sheet-btn').classList.toggle('active',v==='sheet');
+  const practiceOn=v==='practice';
+  document.getElementById('practice-area').style.display=practiceOn?'grid':'none';
+  document.getElementById('sheet-view').classList.toggle('show',!practiceOn);
+  hintEl.style.display=practiceOn?'block':'none';
+  document.querySelector('.progress-row').style.display=practiceOn?'flex':'none';
+  document.getElementById('complete-screen').classList.remove('show');
+  if(!practiceOn) buildSheetView();
+}
+
+const SUBCAT_LABELS={seion:'Seion 清音',dakuon:'Dakūon 濁音',handakuon:'Handakūon 半濁音',yoon:'Yōon 拗音'};
+function buildSheetView(){
+  const container=document.getElementById('sheet-view');
+  const subcats=['seion','dakuon','handakuon','yoon'].filter(sc=>DATA[cat][sc]&&DATA[cat][sc].length>0);
+  if(!subcats.length){ container.innerHTML='<div class="sheet-empty">No characters in this category.</div>'; return; }
+  container.innerHTML=subcats.map(sc=>{
+    const list=DATA[cat][sc];
+    const cells=list.map((item,i)=>{
+      const hasNote=!!userNotes[cat+'_'+item.c];
+      return `<div class="sheet-cell" onclick="jumpToChar('${sc}',${i})" title="${item.r}${hasNote?' — has a note':''}">
+        ${hasNote?'<span class="sc-note-dot"></span>':''}
+        <div class="sc-char">${item.c}</div>
+        <div class="sc-romaji">${item.r}</div>
+      </div>`;
+    }).join('');
+    return `<div class="sheet-section">
+      <div class="sheet-section-title">${SUBCAT_LABELS[sc]||sc} · ${list.length}</div>
+      <div class="sheet-grid">${cells}</div>
+    </div>`;
+  }).join('');
+}
+function jumpToChar(sc,i){
+  subcat=sc; idx=i; shuffleMode=false;
+  document.getElementById('shuffle-btn').classList.remove('active');
+  document.getElementById('shuffle-btn').textContent='🔀 Shuffle';
+  document.querySelectorAll('.subtab').forEach(s=>s.classList.toggle('active',s.getAttribute('onclick').includes("'"+sc+"'")));
+  setView('practice');
+  updateDisplay(); clearCanvas();
+  showToast('→ '+DATA[cat][sc][i].c);
 }
 
 // ═══════════════════════════════════════════
@@ -784,6 +997,7 @@ function init(){
   buildBadges();
   updateGoalUI();
   updateLevelUI();
+  updateDateBar();
   resizeCanvas();
   updateDisplay();
   filterSubtabs();
@@ -971,6 +1185,7 @@ function updateDisplay(){
   } else { ex.style.display='none'; }
   document.getElementById('progress-label').textContent=(idx+1)+' / '+list.length;
   document.getElementById('progress-fill').style.width=Math.max(2,Math.round(((idx+1)/list.length)*100))+'%';
+  loadNoteForCurrent();
 }
 
 // ═══════════════════════════════════════════
@@ -1006,12 +1221,14 @@ function nextChar(){
     updateDisplay(); clearCanvas();
     gainXP(1);
     updateGoalDone();
+    recordStudyDay();
     if(timerInterval)timerScore++;
     document.getElementById('timer-score').textContent=timerScore;
     showToast('✓ '+prev+' → next');
   } else {
     gainXP(5);
     updateGoalDone();
+    recordStudyDay();
     checkBadge();
     showComplete(list);
   }
@@ -1117,8 +1334,10 @@ function setCategory(c,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
   document.querySelectorAll('.subtab').forEach(s=>s.classList.toggle('active',s.getAttribute('onclick').includes("'seion'")));
   filterSubtabs();
-  document.getElementById('practice-area').style.display='grid';
-  hintEl.style.display='block';
+  if(currentView==='practice'){
+    document.getElementById('practice-area').style.display='grid';
+    hintEl.style.display='block';
+  } else { buildSheetView(); }
   document.getElementById('complete-screen').classList.remove('show');
   if(shuffleMode){const list=[...DATA[cat][subcat]];for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}shuffledList=list;}
   updateDisplay(); clearCanvas();
@@ -1127,8 +1346,10 @@ function setSubcat(sc,btn){
   if(!DATA[cat][sc]||DATA[cat][sc].length===0)return;
   subcat=sc; idx=0;
   document.querySelectorAll('.subtab').forEach(s=>s.classList.remove('active')); btn.classList.add('active');
-  document.getElementById('practice-area').style.display='grid';
-  hintEl.style.display='block';
+  if(currentView==='practice'){
+    document.getElementById('practice-area').style.display='grid';
+    hintEl.style.display='block';
+  } else { buildSheetView(); }
   document.getElementById('complete-screen').classList.remove('show');
   if(shuffleMode){const list=[...DATA[cat][subcat]];for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}shuffledList=list;}
   updateDisplay(); clearCanvas();
